@@ -83,3 +83,66 @@ e/ Here I assume E1 count as 0 node
 
 
 -- Question 3
+data T a = L a | B (T a) (T a) deriving Show
+
+instance Functor T where
+    fmap f (L a)        = L (f a)
+    fmap f (B t1 t2)    = B (fmap f t1) (fmap f t2)
+    
+u3 f0 f (L a)        = f0 a
+u3 f0 f (B t1 t2)    = f (u3 f0 f t1, u3 f0 f t2)
+
+btreeSum2   = u3 (\s -> s) (\(a,b) -> a + b)
+treeSize2    = u3 (\s -> 1) (\(a,b) -> a + b)
+
+tree3 = B (L 2) (L 3)
+tree4 = B (B (L [2..3]) (L [5..10])) (L [4..200])
+
+
+{-
+a/ Testing
+*Main> fmap (2*) tree3
+B (L 4) (L 6)
+*Main> fmap head tree4
+B (B (L 2) (L 5)) (L 4)
+b/ The H algebra is
+H X = A + X . X
+
+c/ type
+u :: (a -> b) -> ((b,b) -> b) -> (T a) -> b 
+
+d/*Main> btreeSum2 tree3
+5
+*Main> treeSize2 tree3
+2
+*Main> treeSize2 tree4
+3
+
+-}
+
+
+-- Question 4
+data Nat = Z | S Nat deriving Show
+
+u4 b0 f Z        = b0
+u4 b0 f (S n)    = f (u4 b0 f n)
+
+add x = u4 x (\s -> S s)
+mult x = u4 Z (\s -> add x s)
+
+facth = u4 (Z, S Z) (\(n, fn) -> (S n, mult (S n) fn))
+fact = snd.facth
+
+{- Testing
+*Main> add (S (S Z)) (S Z)
+S (S (S Z))
+*Main> mult (S (S Z)) (S Z)
+S (S Z)
+*Main> mult (S (S Z)) (S (S Z))
+S (S (S (S Z)))
+*Main> facth (S (S (S Z)))
+(S (S (S Z)),S (S (S (S (S (S Z))))))
+*Main> fact (S (S (S Z)))
+S (S (S (S (S (S Z)))))
+ 
+-}
